@@ -1,0 +1,223 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Abundance Zone Youth Management Platform v2.0 — Render Blueprint
+# Infrastructure as Code for automated deployment
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  # ─── Web Service (FastAPI Backend) ─────────────────────────────────────────
+  - type: web
+    name: abundance-zone-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    region: oregon
+    plan: starter
+    branch: main
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: APP_NAME
+        value: "Abundance Zone Youth Platform v2.0"
+      - key: APP_VERSION
+        value: 2.0.0
+      - key: DEBUG
+        value: false
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 8000
+      - key: WORKERS
+        value: 4
+      - key: ALLOWED_HOSTS
+        value: '["abundance-zone-backend.onrender.com","api.abundancezone.org"]'
+      - key: CORS_ORIGINS
+        value: '["https://abundancezone.org","https://www.abundancezone.org"]'
+      
+      # Database (from Render secret or manual entry)
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_URL_SYNC
+        sync: false
+      - key: DATABASE_POOL_SIZE
+        value: 10
+      - key: DATABASE_MAX_OVERFLOW
+        value: 20
+      
+      # Redis (from Render secret or manual entry)
+      - key: REDIS_URL
+        sync: false
+      - key: CELERY_BROKER_URL
+        sync: false
+      - key: CELERY_RESULT_BACKEND
+        sync: false
+      
+      # JWT Secrets (generate with: openssl rand -hex 32)
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: JWT_REFRESH_SECRET_KEY
+        generateValue: true
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 15
+      - key: REFRESH_TOKEN_EXPIRE_DAYS
+        value: 7
+      
+      # AI Services
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      
+      # File Storage
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      
+      # Email
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: noreply@abundancezone.org
+      - key: EMAIL_FROM_NAME
+        value: "Abundance Zone Youth Platform"
+      
+      # WhatsApp
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_WHATSAPP_FROM
+        sync: false
+      
+      # Firebase
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY_ID
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      
+      # Frontend URL
+      - key: FRONTEND_URL
+        value: https://abundancezone.org
+      - key: EMAIL_VERIFICATION_EXPIRE_HOURS
+        value: 24
+      - key: PASSWORD_RESET_EXPIRE_HOURS
+        value: 2
+      
+      # Rate Limiting
+      - key: RATE_LIMIT_PER_MINUTE
+        value: 60
+      - key: AUTH_RATE_LIMIT_PER_MINUTE
+        value: 10
+      
+      # Cache TTL
+      - key: AI_CACHE_TTL_SECONDS
+        value: 86400
+      - key: ANALYTICS_CACHE_TTL_SECONDS
+        value: 2592000
+      
+      # Error Monitoring
+      - key: SENTRY_DSN
+        sync: false
+    
+    # Auto-deploy on push to main
+    autoDeploy: true
+    
+    # Build command (run migrations)
+    buildCommand: |
+      python -m alembic upgrade head
+    
+    # Number of instances
+    numInstances: 1
+    
+    # Scaling configuration
+    scaling:
+      minInstances: 1
+      maxInstances: 3
+      targetCPUPercent: 70
+      targetMemoryPercent: 80
+
+  # ─── Celery Worker (Background Tasks) ──────────────────────────────────────
+  - type: worker
+    name: abundance-zone-celery-worker
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    region: oregon
+    plan: starter
+    branch: main
+    dockerCommand: celery -A app.celery_app worker --loglevel=info --concurrency=4 --max-tasks-per-child=1000
+    envVars:
+      # Inherit most env vars from web service
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_URL_SYNC
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: CELERY_BROKER_URL
+        sync: false
+      - key: CELERY_RESULT_BACKEND
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+    autoDeploy: true
+    numInstances: 1
+
+  # ─── Celery Beat (Task Scheduler) ───────────────────────────────────────────
+  - type: worker
+    name: abundance-zone-celery-beat
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    region: oregon
+    plan: starter
+    branch: main
+    dockerCommand: celery -A app.celery_app beat --loglevel=info
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: CELERY_BROKER_URL
+        sync: false
+      - key: CELERY_RESULT_BACKEND
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+    autoDeploy: true
+    # CRITICAL: Only 1 instance for beat scheduler
+    numInstances: 1
+
+# ─── Databases (External - configure manually) ───────────────────────────────
+# PostgreSQL: Use Neon (https://neon.tech)
+# Redis: Use Upstash (https://upstash.com)
+# 
+# After creating these services, add connection strings to Render environment:
+# - DATABASE_URL (pooled connection with asyncpg)
+# - DATABASE_URL_SYNC (direct connection for migrations)
+# - REDIS_URL
+# - CELERY_BROKER_URL
+# - CELERY_RESULT_BACKEND
