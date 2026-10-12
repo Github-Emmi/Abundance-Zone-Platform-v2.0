@@ -40,12 +40,12 @@ T = TypeVar("T")
 class ErrorDetail(BaseModel):
     """
     Error detail model for standardized error responses.
-    
+
     Attributes:
         code: Machine-readable error code (e.g., "VALIDATION_ERROR", "NOT_FOUND")
         message: Human-readable error message for client display
         details: Optional dictionary with additional error context (field errors, stack traces, etc.)
-    
+
     Examples:
         >>> error = ErrorDetail(
         ...     code="VALIDATION_ERROR",
@@ -53,7 +53,7 @@ class ErrorDetail(BaseModel):
         ...     details={"field": "email", "value": "invalid-email"}
         ... )
     """
-    
+
     code: str = Field(
         ...,
         description="Machine-readable error code",
@@ -84,12 +84,12 @@ class ErrorDetail(BaseModel):
 class ErrorResponse(BaseModel):
     """
     Standardized error response envelope.
-    
+
     Attributes:
         success: Always false for error responses
         error: Error detail object with code, message, and optional details
         timestamp: UTC timestamp when the error occurred
-    
+
     Examples:
         >>> response = ErrorResponse(
         ...     error=ErrorDetail(
@@ -98,7 +98,7 @@ class ErrorResponse(BaseModel):
         ...     )
         ... )
     """
-    
+
     success: Literal[False] = Field(
         default=False,
         description="Success flag, always false for errors",
@@ -133,16 +133,16 @@ class ErrorResponse(BaseModel):
 class ApiResponse(BaseModel, Generic[T]):
     """
     Generic success response envelope.
-    
+
     Type Parameters:
         T: Type of the data payload
-    
+
     Attributes:
         success: Always true for success responses
         data: Response payload of type T
         meta: Optional metadata (pagination info, warnings, etc.)
         timestamp: UTC timestamp when the response was generated
-    
+
     Examples:
         >>> from pydantic import BaseModel
         >>> class User(BaseModel):
@@ -152,7 +152,7 @@ class ApiResponse(BaseModel, Generic[T]):
         ...     data=User(id="123", name="John Doe")
         ... )
     """
-    
+
     success: Literal[True] = Field(
         default=True,
         description="Success flag, always true for successful responses",
@@ -185,20 +185,20 @@ class ApiResponse(BaseModel, Generic[T]):
 class PaginatedResponse(BaseModel, Generic[T]):
     """
     Paginated list response with metadata.
-    
+
     Type Parameters:
         T: Type of items in the list
-    
+
     Attributes:
         items: List of items of type T for the current page
         total: Total number of items across all pages
         page: Current page number (1-indexed)
         page_size: Number of items per page
         has_next: Whether there are more pages available
-    
+
     Computed Properties:
         total_pages: Total number of pages (computed from total and page_size)
-    
+
     Examples:
         >>> from pydantic import BaseModel
         >>> class User(BaseModel):
@@ -215,7 +215,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
         >>> response.total_pages
         5
     """
-    
+
     items: list[T] = Field(
         ...,
         description="List of items for the current page",
@@ -245,7 +245,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
     def total_pages(self) -> int:
         """
         Calculate total number of pages.
-        
+
         Returns:
             Total number of pages based on total items and page size
         """
@@ -258,18 +258,18 @@ class PaginatedResponse(BaseModel, Generic[T]):
     def compute_has_next(cls, v: bool | None, info) -> bool:
         """
         Auto-compute has_next if not provided.
-        
+
         If has_next is not explicitly set, compute it based on page, page_size, and total.
         """
         if v is not None:
             return v
-        
+
         # Get other field values from validation context
         data = info.data
         page = data.get("page", 1)
         page_size = data.get("page_size", 10)
         total = data.get("total", 0)
-        
+
         # Compute has_next: true if there are more items beyond current page
         return (page * page_size) < total
 

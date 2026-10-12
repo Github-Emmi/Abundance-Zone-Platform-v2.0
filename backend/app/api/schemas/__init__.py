@@ -13,7 +13,6 @@ __all__ = [
     "RegisterRequest",
     "TokenResponse",
     "RefreshRequest",
-    
     # User schemas
     "UserCreate",
     "UserUpdate",

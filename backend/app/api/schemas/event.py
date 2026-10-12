@@ -1,4 +1,5 @@
 """Event API Schemas"""
+
 from datetime import datetime
 from pydantic import BaseModel, Field
 from app.domain.value_objects.enums import EventType, EventStatus
@@ -34,7 +35,7 @@ class EventResponse(BaseModel):
     status: str
     is_recurring: bool
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 

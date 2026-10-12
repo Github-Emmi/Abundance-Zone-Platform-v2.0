@@ -1,4 +1,5 @@
 """Youth API Schemas"""
+
 from datetime import datetime
 from pydantic import BaseModel, Field, EmailStr
 from app.domain.value_objects.enums import Gender
@@ -33,7 +34,7 @@ class YouthResponse(BaseModel):
     attendance_rate: float
     profile_image_url: str | None
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 

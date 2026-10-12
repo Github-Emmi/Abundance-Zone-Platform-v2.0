@@ -1,4 +1,5 @@
 """Attendance API Schemas"""
+
 from datetime import datetime
 from pydantic import BaseModel, Field
 
@@ -20,7 +21,7 @@ class AttendanceResponse(BaseModel):
     status: str
     check_in_time: datetime | None
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 

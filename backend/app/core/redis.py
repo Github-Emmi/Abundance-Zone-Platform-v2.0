@@ -27,7 +27,7 @@ redis_client = redis.Redis(connection_pool=redis_pool)
 async def get_redis() -> redis.Redis:
     """
     FastAPI dependency that provides Redis client.
-    
+
     Usage:
         @router.get("/cached-data")
         async def get_cached_data(redis: Redis = Depends(get_redis)):
@@ -49,12 +49,12 @@ async def close_redis_connections() -> None:
 async def set_cache(key: str, value: str, ttl: int | None = None) -> bool:
     """
     Set a value in Redis cache with optional TTL.
-    
+
     Args:
         key: Cache key
         value: Value to cache (will be JSON serialized)
         ttl: Time to live in seconds (None = no expiration)
-    
+
     Returns:
         True if successful
     """
@@ -66,10 +66,10 @@ async def set_cache(key: str, value: str, ttl: int | None = None) -> bool:
 async def get_cache(key: str) -> str | None:
     """
     Get a value from Redis cache.
-    
+
     Args:
         key: Cache key
-    
+
     Returns:
         Cached value or None if not found
     """
@@ -79,10 +79,10 @@ async def get_cache(key: str) -> str | None:
 async def delete_cache(key: str) -> bool:
     """
     Delete a value from Redis cache.
-    
+
     Args:
         key: Cache key
-    
+
     Returns:
         True if key was deleted
     """
@@ -92,17 +92,17 @@ async def delete_cache(key: str) -> bool:
 async def invalidate_pattern(pattern: str) -> int:
     """
     Delete all keys matching a pattern.
-    
+
     Args:
         pattern: Redis key pattern (e.g., "youth:*")
-    
+
     Returns:
         Number of keys deleted
     """
     keys = []
     async for key in redis_client.scan_iter(match=pattern):
         keys.append(key)
-    
+
     if keys:
         return await redis_client.delete(*keys)
     return 0
@@ -111,11 +111,11 @@ async def invalidate_pattern(pattern: str) -> int:
 async def increment_counter(key: str, amount: int = 1) -> int:
     """
     Increment a counter in Redis (useful for rate limiting).
-    
+
     Args:
         key: Counter key
         amount: Increment amount (default: 1)
-    
+
     Returns:
         New counter value
     """
@@ -125,11 +125,11 @@ async def increment_counter(key: str, amount: int = 1) -> int:
 async def set_expiry(key: str, seconds: int) -> bool:
     """
     Set expiration time on an existing key.
-    
+
     Args:
         key: Redis key
         seconds: TTL in seconds
-    
+
     Returns:
         True if expiry was set
     """

@@ -57,7 +57,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     FastAPI dependency that provides a database session.
     Automatically commits on success, rolls back on error.
-    
+
     Usage:
         @router.get("/youths")
         async def list_youths(db: AsyncSession = Depends(get_db)):

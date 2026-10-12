@@ -37,7 +37,7 @@ security = HTTPBearer()
 
 class CurrentUser(BaseModel):
     """Current authenticated user context."""
-    
+
     id: str
     email: str
     name: str
@@ -46,14 +46,14 @@ class CurrentUser(BaseModel):
     department_id: str | None
     is_active: bool
     is_email_verified: bool
-    
+
     class Config:
         from_attributes = True
 
 
 class RequestContext(BaseModel):
     """Complete request context for audit logging."""
-    
+
     user_id: str | None = None
     ip_address: str | None = None
     user_agent: str | None = None
@@ -69,7 +69,7 @@ async def get_current_user(
 ) -> CurrentUser:
     """Get current authenticated user from JWT token."""
     token = credentials.credentials
-    
+
     try:
         payload = JWTHandler.verify_token(token, settings.JWT_SECRET_KEY)
     except Exception:
@@ -78,25 +78,23 @@ async def get_current_user(
             detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     user_id = payload.get("sub")
     if not user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token payload",
         )
-    
-    result = await db.execute(
-        select(UserModel).where(UserModel.id == user_id)
-    )
+
+    result = await db.execute(select(UserModel).where(UserModel.id == user_id))
     user = result.scalar_one_or_none()
-    
+
     if not user or not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found or inactive",
         )
-    
+
     return CurrentUser(
         id=user.id,
         email=user.email,
@@ -111,8 +109,9 @@ async def get_current_user(
 
 def require_role(allowed_roles: list[Role]):
     """Dependency factory for role-based access control."""
+
     async def role_checker(
-        current_user: CurrentUser = Depends(get_current_user)
+        current_user: CurrentUser = Depends(get_current_user),
     ) -> CurrentUser:
         if current_user.role not in allowed_roles:
             raise HTTPException(
@@ -120,13 +119,15 @@ def require_role(allowed_roles: list[Role]):
                 detail=f"Insufficient permissions",
             )
         return current_user
+
     return role_checker
 
 
 def require_branch_access(target_branch_id: str | None = None):
     """Dependency factory for branch isolation enforcement."""
+
     async def branch_access_checker(
-        current_user: CurrentUser = Depends(get_current_user)
+        current_user: CurrentUser = Depends(get_current_user),
     ) -> CurrentUser:
         if current_user.role == Role.SUPER_ADMIN:
             return current_user
@@ -140,13 +141,15 @@ def require_branch_access(target_branch_id: str | None = None):
                 detail="Access denied: Cannot access this branch",
             )
         return current_user
+
     return branch_access_checker
 
 
 def require_department_access(target_dept_id: str | None = None):
     """Dependency factory for department access enforcement."""
+
     async def department_access_checker(
-        current_user: CurrentUser = Depends(get_current_user)
+        current_user: CurrentUser = Depends(get_current_user),
     ) -> CurrentUser:
         if not can_manage_department(
             current_user.role,
@@ -158,6 +161,7 @@ def require_department_access(target_dept_id: str | None = None):
                 detail="Access denied: Cannot manage this department",
             )
         return current_user
+
     return department_access_checker
 
 
@@ -169,14 +173,14 @@ async def get_client_ip(request: Request) -> str | None:
     forwarded_for = request.headers.get("X-Forwarded-For")
     if forwarded_for:
         return forwarded_for.split(",")[0].strip()
-    
+
     real_ip = request.headers.get("X-Real-IP")
     if real_ip:
         return real_ip.strip()
-    
+
     if request.client:
         return request.client.host
-    
+
     return None
 
 
@@ -192,7 +196,7 @@ async def get_request_context(
     """Build complete request context for audit logging."""
     ip_address = await get_client_ip(request)
     user_agent = await get_user_agent(request)
-    
+
     return RequestContext(
         user_id=current_user.id if current_user else None,
         ip_address=ip_address,

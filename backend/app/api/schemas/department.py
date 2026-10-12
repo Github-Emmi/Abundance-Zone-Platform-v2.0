@@ -1,4 +1,5 @@
 """Department API Schemas"""
+
 from datetime import datetime
 from pydantic import BaseModel, Field
 
@@ -23,7 +24,7 @@ class DepartmentResponse(BaseModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
         from_attributes = True
 

@@ -1,4 +1,5 @@
 """Notification API Schemas"""
+
 from datetime import datetime
 from pydantic import BaseModel, Field
 from app.domain.value_objects.enums import NotificationType
@@ -11,7 +12,7 @@ class NotificationResponse(BaseModel):
     type: str
     read_at: datetime | None
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 

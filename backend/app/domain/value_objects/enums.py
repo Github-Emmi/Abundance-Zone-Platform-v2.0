@@ -8,6 +8,7 @@ from enum import Enum
 
 class Role(str, Enum):
     """User roles in the system (4-tier RBAC)"""
+
     SUPER_ADMIN = "SUPER_ADMIN"
     BRANCH_COORDINATOR = "BRANCH_COORDINATOR"
     DEPARTMENT_LEADER = "DEPARTMENT_LEADER"
@@ -16,12 +17,14 @@ class Role(str, Enum):
 
 class Gender(str, Enum):
     """Gender options"""
+
     MALE = "MALE"
     FEMALE = "FEMALE"
 
 
 class MembershipStatus(str, Enum):
     """Youth membership status"""
+
     PENDING = "PENDING"
     ACTIVE = "ACTIVE"
     AT_RISK = "AT_RISK"
@@ -34,6 +37,7 @@ class MembershipStatus(str, Enum):
 
 class AttendanceStatus(str, Enum):
     """Attendance record status"""
+
     PENDING_CHECK_IN = "PENDING_CHECK_IN"
     CHECKED_IN = "CHECKED_IN"
     PRESENT = "PRESENT"
@@ -45,6 +49,7 @@ class AttendanceStatus(str, Enum):
 
 class EventType(str, Enum):
     """Event types for recurring services"""
+
     SUNDAY_SERVICE = "SUNDAY_SERVICE"
     BIBLE_STUDY = "BIBLE_STUDY"
     WORKERS_MEETING = "WORKERS_MEETING"
@@ -56,6 +61,7 @@ class EventType(str, Enum):
 
 class EventStatus(str, Enum):
     """Event lifecycle status"""
+
     DRAFT = "DRAFT"
     SCHEDULED = "SCHEDULED"
     RESCHEDULED = "RESCHEDULED"
@@ -67,6 +73,7 @@ class EventStatus(str, Enum):
 
 class PledgeType(str, Enum):
     """Pledge/financial commitment types"""
+
     MONTHLY = "MONTHLY"
     PROJECT = "PROJECT"
     PROGRAM = "PROGRAM"
@@ -75,6 +82,7 @@ class PledgeType(str, Enum):
 
 class PledgeStatus(str, Enum):
     """Pledge payment status"""
+
     PLEDGED = "PLEDGED"
     PARTIALLY_PAID = "PARTIALLY_PAID"
     FULLY_PAID = "FULLY_PAID"
@@ -86,6 +94,7 @@ class PledgeStatus(str, Enum):
 
 class NotificationChannel(str, Enum):
     """Notification delivery channels"""
+
     IN_APP = "IN_APP"
     EMAIL = "EMAIL"
     WHATSAPP = "WHATSAPP"
@@ -94,6 +103,7 @@ class NotificationChannel(str, Enum):
 
 class NotificationType(str, Enum):
     """Notification type categories"""
+
     ANNOUNCEMENT = "ANNOUNCEMENT"
     REMINDER = "REMINDER"
     ATTENDANCE_ALERT = "ATTENDANCE_ALERT"
@@ -105,6 +115,7 @@ class NotificationType(str, Enum):
 
 class NotificationPriority(str, Enum):
     """Notification priority levels"""
+
     CRITICAL = "CRITICAL"  # Security alerts, payment confirmations
     HIGH = "HIGH"  # Event reminders, attendance alerts
     NORMAL = "NORMAL"  # General announcements
@@ -113,6 +124,7 @@ class NotificationPriority(str, Enum):
 
 class NotificationStatus(str, Enum):
     """Notification delivery status"""
+
     QUEUED = "QUEUED"
     SENDING = "SENDING"
     SENT = "SENT"
@@ -123,6 +135,7 @@ class NotificationStatus(str, Enum):
 
 class AuditAction(str, Enum):
     """Audit log action types"""
+
     CREATE = "CREATE"
     UPDATE = "UPDATE"
     DELETE = "DELETE"

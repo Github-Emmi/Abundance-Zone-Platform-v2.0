@@ -25,7 +25,7 @@ from app.api.v1 import (
     youths,
     events,
     attendance,
-    notifications
+    notifications,
 )
 
 
@@ -38,16 +38,16 @@ async def lifespan(app: FastAPI):
     print(f"📍 Environment: {settings.ENVIRONMENT}")
     print(f"🗄️  Database: Neon PostgreSQL (async)")
     print(f"⚡ Cache: Upstash Redis")
-    
+
     # Create tables in development only
     if settings.ENVIRONMENT == "development":
         print("📊 Creating database tables...")
         await create_tables()
-    
+
     print("✅ Application started successfully\n")
-    
+
     yield  # Application is running
-    
+
     # ─── Shutdown ────────────────────────────────────────────────────────────
     print("\n🛑 Shutting down application...")
     await close_db_connections()
@@ -70,9 +70,11 @@ def create_app() -> FastAPI:
     # ─── Security Middleware ─────────────────────────────────────────────────
     app.add_middleware(
         TrustedHostMiddleware,
-        allowed_hosts=settings.ALLOWED_HOSTS if settings.ENVIRONMENT == "production" else ["*"]
+        allowed_hosts=(
+            settings.ALLOWED_HOSTS if settings.ENVIRONMENT == "production" else ["*"]
+        ),
     )
-    
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.CORS_ORIGINS,
@@ -94,12 +96,14 @@ def create_app() -> FastAPI:
                     "code": exc.code,
                     "message": exc.message,
                     "details": exc.details,
-                }
-            }
+                },
+            },
         )
 
     @app.exception_handler(RequestValidationError)
-    async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    async def validation_exception_handler(
+        request: Request, exc: RequestValidationError
+    ):
         """Handle Pydantic validation errors"""
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -109,8 +113,8 @@ def create_app() -> FastAPI:
                     "code": "VALIDATION_ERROR",
                     "message": "Invalid request data",
                     "details": exc.errors(),
-                }
-            }
+                },
+            },
         )
 
     @app.exception_handler(StarletteHTTPException)
@@ -123,8 +127,8 @@ def create_app() -> FastAPI:
                 "error": {
                     "code": f"HTTP_{exc.status_code}",
                     "message": exc.detail,
-                }
-            }
+                },
+            },
         )
 
     @app.exception_handler(Exception)
@@ -132,9 +136,10 @@ def create_app() -> FastAPI:
         """Handle unexpected exceptions"""
         if settings.ENVIRONMENT == "development":
             import traceback
+
             print(f"❌ Unhandled exception: {exc}")
             traceback.print_exc()
-        
+
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={
@@ -142,8 +147,8 @@ def create_app() -> FastAPI:
                 "error": {
                     "code": "INTERNAL_SERVER_ERROR",
                     "message": "An unexpected error occurred",
-                }
-            }
+                },
+            },
         )
 
     # ─── Health Check Endpoint ───────────────────────────────────────────────
@@ -184,6 +189,7 @@ app = create_app()
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(
         "app.main:app",
         host=settings.HOST,

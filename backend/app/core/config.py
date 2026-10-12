@@ -2,7 +2,7 @@
 Core Configuration Module
 Handles all environment variables and application settings
 Uses Pydantic Settings for validation
-""" 
+"""
 
 from typing import Literal
 from pydantic import field_validator
@@ -11,12 +11,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     """Application settings with environment variable validation"""
-    
+
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=True,
-        extra="ignore"
+        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
     )
 
     # ─── Application ─────────────────────────────────────────────────────────
@@ -27,7 +24,7 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
     PORT: int = 8000
     WORKERS: int = 1
-    
+
     ALLOWED_HOSTS: list[str] = ["localhost", "127.0.0.1"]
     CORS_ORIGINS: list[str] = ["http://localhost:3000"]
 
