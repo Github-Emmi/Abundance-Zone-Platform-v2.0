@@ -62,7 +62,7 @@ class UserInfo(BaseModel):
     role: Role
     branch_id: str | None
     department_id: str | None
-    profile_image_url: str | None
+    profile_image_url: str | None = None
     is_email_verified: bool
     is_active: bool
     

@@ -74,6 +74,9 @@ celerybeat.pid
 .mypy_cache/
 .dmypy.json
 dmypy.json
+backend/set-beat-secrets.sh
+backend/set-worker-secrets.sh
 
 # Ruff
 .ruff_cache/
+firebase-private-key.pem

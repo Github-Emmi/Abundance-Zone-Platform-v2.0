@@ -1,0 +1,17 @@
+app = "abundance-zone-beat"
+primary_region = "ord"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  ENVIRONMENT = "production"
+
+[processes]
+  beat = "celery -A app.tasks.celery_app beat --loglevel=info"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
+[[restart]]
+  policy = "always"

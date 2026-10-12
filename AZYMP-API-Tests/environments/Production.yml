@@ -1,0 +1,10 @@
+name: Production
+variables:
+  - name: baseUrl
+    value: https://abundance-zone-platform-v2-0.onrender.com
+  - name: token
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiYmQ3MDBjOC0yZmJmLTQ5OTItOTkwZS0yNDc1YzE3MTRmYTUiLCJlbWFpbCI6ImFkbWluQGFidW5kYW5jZXpvbmUub3JnIiwicm9sZSI6IlNVUEVSX0FETUlOIiwiYnJhbmNoX2lkIjpudWxsLCJleHAiOjE3OTE3OTkzOTMsImlhdCI6MTc5MTc5ODQ5MywianRpIjoiYmViYzJmYmUtYjJjMi00MTY2LWI2MjctODRlOWQyOTE5Yjk3IiwidHlwZSI6ImFjY2VzcyJ9.Fb3-OgGO-o8a9_wbbAhKcbL174GTyRXahlFtB9AB9D8
+  - name: refreshToken
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiYmQ3MDBjOC0yZmJmLTQ5OTItOTkwZS0yNDc1YzE3MTRmYTUiLCJleHAiOjE3OTI0MDMyOTMsImlhdCI6MTc5MTc5ODQ5MywianRpIjoiNmU5NjFhYTktOGM3Mi00NDcyLThmMzYtYjM3YjhlZjUyOTQ5IiwidHlwZSI6InJlZnJlc2gifQ.TZsp7eA8Wv309Y5UXIxN4DBGw4vGgjqsjlGrkEdztE4
+  - name: userId
+    value: bbd700c8-2fbf-4992-990e-2475c1714fa5
