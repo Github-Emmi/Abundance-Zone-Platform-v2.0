@@ -4,6 +4,7 @@ Provides shared fixtures for integration tests
 """
 
 import asyncio
+import os
 from typing import AsyncGenerator, Generator
 import pytest
 from httpx import AsyncClient
@@ -19,26 +20,29 @@ from app.infrastructure.database.models.department import DepartmentModel
 from app.infrastructure.database.models.youth import YouthModel
 from app.infrastructure.database.models.event import EventModel
 from app.infrastructure.security.password_hasher import PasswordHasher
-from app.domain.value_objects.enums import Role, Gender, MembershipStatus, EventType, EventStatus
+from app.domain.value_objects.enums import (
+    Role,
+    Gender,
+    MembershipStatus,
+    EventType,
+    EventStatus,
+)
 
 
-# Test database URL
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+# Use DATABASE_URL from environment (set by CI)
+TEST_DATABASE_URL = os.getenv(
+    "DATABASE_URL", "postgresql+asyncpg://postgres:test_password@localhost:5432/test_db"
+)
 
 # Create test engine
-test_engine = create_async_engine(
-    TEST_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=NullPool,
-    echo=False
-)
+test_engine = create_async_engine(TEST_DATABASE_URL, poolclass=NullPool, echo=False)
 
 TestSessionLocal = async_sessionmaker(
     test_engine,
     class_=AsyncSession,
     expire_on_commit=False,
     autocommit=False,
-    autoflush=False
+    autoflush=False,
 )
 
 
@@ -57,12 +61,12 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
-    
+
     # Create session
     async with TestSessionLocal() as session:
         yield session
         await session.rollback()
-    
+
     # Cleanup
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
@@ -71,14 +75,15 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
 @pytest.fixture
 async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     """Create test HTTP client with database override"""
+
     async def override_get_db():
         yield db_session
-    
+
     app.dependency_overrides[get_db] = override_get_db
-    
+
     async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
-    
+
     app.dependency_overrides.clear()
 
 
@@ -90,10 +95,14 @@ def password_hasher() -> PasswordHasher:
 
 # ─── User Fixtures ───────────────────────────────────────────────────────────
 
+
 @pytest.fixture
-async def super_admin_user(db_session: AsyncSession, password_hasher: PasswordHasher) -> UserModel:
+async def super_admin_user(
+    db_session: AsyncSession, password_hasher: PasswordHasher
+) -> UserModel:
     """Create super admin user"""
     from uuid import uuid4
+
     user = UserModel(
         id=str(uuid4()),
         name="Super Admin",
@@ -101,7 +110,7 @@ async def super_admin_user(db_session: AsyncSession, password_hasher: PasswordHa
         password=password_hasher.hash_password("Admin123!"),
         role=Role.SUPER_ADMIN.value,
         is_active=True,
-        is_email_verified=True
+        is_email_verified=True,
     )
     db_session.add(user)
     await db_session.commit()
@@ -111,12 +120,11 @@ async def super_admin_user(db_session: AsyncSession, password_hasher: PasswordHa
 
 @pytest.fixture
 async def branch_coordinator_user(
-    db_session: AsyncSession,
-    password_hasher: PasswordHasher,
-    test_branch: BranchModel
+    db_session: AsyncSession, password_hasher: PasswordHasher, test_branch: BranchModel
 ) -> UserModel:
     """Create branch coordinator user"""
     from uuid import uuid4
+
     user = UserModel(
         id=str(uuid4()),
         name="Branch Coordinator",
@@ -125,7 +133,7 @@ async def branch_coordinator_user(
         role=Role.BRANCH_COORDINATOR.value,
         branch_id=test_branch.id,
         is_active=True,
-        is_email_verified=True
+        is_email_verified=True,
     )
     db_session.add(user)
     await db_session.commit()
@@ -138,10 +146,11 @@ async def department_leader_user(
     db_session: AsyncSession,
     password_hasher: PasswordHasher,
     test_branch: BranchModel,
-    test_department: DepartmentModel
+    test_department: DepartmentModel,
 ) -> UserModel:
     """Create department leader user"""
     from uuid import uuid4
+
     user = UserModel(
         id=str(uuid4()),
         name="Department Leader",
@@ -151,7 +160,7 @@ async def department_leader_user(
         branch_id=test_branch.id,
         department_id=test_department.id,
         is_active=True,
-        is_email_verified=True
+        is_email_verified=True,
     )
     db_session.add(user)
     await db_session.commit()
@@ -161,12 +170,13 @@ async def department_leader_user(
 
 # ─── Authentication Fixtures ─────────────────────────────────────────────────
 
+
 @pytest.fixture
 async def super_admin_token(client: AsyncClient) -> str:
     """Get JWT token for super admin"""
     response = await client.post(
         "/api/v1/auth/login",
-        json={"email": "admin@test.com", "password": "Admin123!"}
+        json={"email": "admin@test.com", "password": "Admin123!"},
     )
     assert response.status_code == 200
     data = response.json()
@@ -178,7 +188,7 @@ async def coordinator_token(client: AsyncClient) -> str:
     """Get JWT token for branch coordinator"""
     response = await client.post(
         "/api/v1/auth/login",
-        json={"email": "coordinator@test.com", "password": "Coord123!"}
+        json={"email": "coordinator@test.com", "password": "Coord123!"},
     )
     assert response.status_code == 200
     data = response.json()
@@ -199,17 +209,19 @@ def coordinator_headers(coordinator_token: str) -> dict:
 
 # ─── Entity Fixtures ─────────────────────────────────────────────────────────
 
+
 @pytest.fixture
 async def test_branch(db_session: AsyncSession) -> BranchModel:
     """Create test branch"""
     from uuid import uuid4
+
     branch = BranchModel(
         id=str(uuid4()),
         name="Test Branch",
         location="Test City",
         address="123 Test St",
         phone="1234567890",
-        is_active=True
+        is_active=True,
     )
     db_session.add(branch)
     await db_session.commit()
@@ -218,15 +230,18 @@ async def test_branch(db_session: AsyncSession) -> BranchModel:
 
 
 @pytest.fixture
-async def test_department(db_session: AsyncSession, test_branch: BranchModel) -> DepartmentModel:
+async def test_department(
+    db_session: AsyncSession, test_branch: BranchModel
+) -> DepartmentModel:
     """Create test department"""
     from uuid import uuid4
+
     dept = DepartmentModel(
         id=str(uuid4()),
         name="Test Department",
         branch_id=test_branch.id,
         description="Test department description",
-        is_active=True
+        is_active=True,
     )
     db_session.add(dept)
     await db_session.commit()
@@ -238,10 +253,11 @@ async def test_department(db_session: AsyncSession, test_branch: BranchModel) ->
 async def test_youth(
     db_session: AsyncSession,
     test_branch: BranchModel,
-    test_department: DepartmentModel
+    test_department: DepartmentModel,
 ) -> YouthModel:
     """Create test youth"""
     from uuid import uuid4
+
     youth = YouthModel(
         id=str(uuid4()),
         fullname="Test Youth",
@@ -251,7 +267,7 @@ async def test_youth(
         branch_id=test_branch.id,
         department_id=test_department.id,
         membership_status=MembershipStatus.ACTIVE.value,
-        attendance_rate=0.0
+        attendance_rate=0.0,
     )
     db_session.add(youth)
     await db_session.commit()
@@ -261,13 +277,12 @@ async def test_youth(
 
 @pytest.fixture
 async def test_event(
-    db_session: AsyncSession,
-    test_branch: BranchModel,
-    super_admin_user: UserModel
+    db_session: AsyncSession, test_branch: BranchModel, super_admin_user: UserModel
 ) -> EventModel:
     """Create test event"""
     from uuid import uuid4
     from datetime import datetime, timedelta
+
     event = EventModel(
         id=str(uuid4()),
         title="Test Event",
@@ -277,7 +292,7 @@ async def test_event(
         event_date=datetime.utcnow() + timedelta(days=7),
         branch_id=test_branch.id,
         created_by_id=super_admin_user.id,
-        venue="Test Venue"
+        venue="Test Venue",
     )
     db_session.add(event)
     await db_session.commit()
