@@ -44,13 +44,12 @@ jobs:
         run: |
           cd ${{ env.BACKEND_DIR }}
           ruff check app/ --ignore F403,F405,E501
-          
       - name: 🔐 Security scan with Bandit
         run: |
           cd ${{ env.BACKEND_DIR }}
           pip install bandit[toml]
-          bandit -r app/ -f json -o bandit-report.json || true
-          bandit -r app/
+          bandit -c .bandit -r app/ -f json -o bandit-report.json || true
+          bandit -c .bandit -r app/
           
       - name: 🔍 Type check with MyPy
         run: |
