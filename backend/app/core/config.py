@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     # ─── Application ─────────────────────────────────────────────────────────
     APP_NAME: str = "Abundance Zone Youth Platform v2.0"
     APP_VERSION: str = "2.0.0"
-    ENVIRONMENT: Literal["development", "staging", "production"] = "development"
+    ENVIRONMENT: Literal["development", "staging", "production", "test"] = "development"
     DEBUG: bool = False
     HOST: str = "0.0.0.0"
     PORT: int = 8000
@@ -30,7 +30,7 @@ class Settings(BaseSettings):
 
     # ─── Database (Neon PostgreSQL) ──────────────────────────────────────────
     DATABASE_URL: str  # postgresql+asyncpg://... (pooled connection)
-    DATABASE_URL_SYNC: str  # postgresql://... (for Alembic migrations)
+    DATABASE_URL_SYNC: str = ""  # postgresql://... (optional for tests)
     DATABASE_POOL_SIZE: int = 10
     DATABASE_MAX_OVERFLOW: int = 20
 
@@ -41,22 +41,22 @@ class Settings(BaseSettings):
 
     # ─── JWT ─────────────────────────────────────────────────────────────────
     JWT_SECRET_KEY: str
-    JWT_REFRESH_SECRET_KEY: str
+    JWT_REFRESH_SECRET_KEY: str = ""  # Will use JWT_SECRET_KEY if empty
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # ─── AI Services ─────────────────────────────────────────────────────────
-    GOOGLE_API_KEY: str  # Gemini AI (primary)
+    GOOGLE_API_KEY: str = ""  # Gemini AI (optional for tests)
     OPENROUTER_API_KEY: str | None = None  # Fallback AI
-    OPENAI_API_KEY: str  # GPT-4o Vision for OCR
+    OPENAI_API_KEY: str = ""  # GPT-4o Vision (optional for tests)
 
     # ─── File Storage ────────────────────────────────────────────────────────
-    CLOUDINARY_CLOUD_NAME: str
-    CLOUDINARY_API_KEY: str
-    CLOUDINARY_API_SECRET: str
+    CLOUDINARY_CLOUD_NAME: str = "test-cloud"
+    CLOUDINARY_API_KEY: str = "test-key"
+    CLOUDINARY_API_SECRET: str = "test-secret"
 
     # ─── Email (Resend) ──────────────────────────────────────────────────────
-    RESEND_API_KEY: str
+    RESEND_API_KEY: str = "test-resend-key"
     EMAIL_FROM: str = "noreply@abundancezone.org"
     EMAIL_FROM_NAME: str = "Abundance Zone Youth Platform"
 
@@ -66,10 +66,10 @@ class Settings(BaseSettings):
     TWILIO_WHATSAPP_FROM: str | None = None
 
     # ─── Firebase ────────────────────────────────────────────────────────────
-    FIREBASE_PROJECT_ID: str
-    FIREBASE_PRIVATE_KEY_ID: str
-    FIREBASE_PRIVATE_KEY: str
-    FIREBASE_CLIENT_EMAIL: str
+    FIREBASE_PROJECT_ID: str = "test-project"
+    FIREBASE_PRIVATE_KEY_ID: str = "test-key-id"
+    FIREBASE_PRIVATE_KEY: str = "test-private-key"
+    FIREBASE_CLIENT_EMAIL: str = "test@test.com"
 
     # ─── Frontend ────────────────────────────────────────────────────────────
     FRONTEND_URL: str = "http://localhost:3000"
@@ -122,6 +122,11 @@ class Settings(BaseSettings):
     def is_staging(self) -> bool:
         """Check if running in staging environment"""
         return self.ENVIRONMENT == "staging"
+
+    @property
+    def is_test(self) -> bool:
+        """Check if running in test environment"""
+        return self.ENVIRONMENT == "test"
 
 
 # Global settings instance
