@@ -36,8 +36,8 @@ async def lifespan(app: FastAPI):
     # ─── Startup ─────────────────────────────────────────────────────────────
     print(f"🚀 Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     print(f"📍 Environment: {settings.ENVIRONMENT}")
-    print(f"🗄️  Database: Neon PostgreSQL (async)")
-    print(f"⚡ Cache: Upstash Redis")
+    print("🗄️  Database: Neon PostgreSQL (async)")
+    print("⚡ Cache: Upstash Redis")
 
     # Create tables in development only
     if settings.ENVIRONMENT == "development":

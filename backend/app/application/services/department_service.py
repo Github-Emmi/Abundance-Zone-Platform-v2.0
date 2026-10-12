@@ -7,7 +7,6 @@ from uuid import uuid4
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db
 from app.core.exceptions import NotFoundException, ValidationException
 from app.infrastructure.repositories.department_repository import (
     DepartmentRepository,
@@ -85,7 +84,7 @@ class DepartmentService:
 
     async def delete_department(self, dept_id: str, db: AsyncSession) -> bool:
         """Soft delete a department."""
-        dept = await self.get_department(dept_id, db)
+        await self.get_department(dept_id, db)
         return await self.dept_repo.delete(dept_id, db)
 
     async def assign_leader(
@@ -146,14 +145,14 @@ class DepartmentService:
         self, dept_id: str, user_id: str, db: AsyncSession
     ) -> bool:
         """Remove a member from a department."""
-        dept = await self.get_department(dept_id, db)
+        await self.get_department(dept_id, db)
         return await self.dept_repo.remove_member(dept_id, user_id, db)
 
     async def update_schedule(
         self, dept_id: str, schedule: dict, db: AsyncSession
     ) -> bool:
         """Update department meeting schedule."""
-        dept = await self.get_department(dept_id, db)
+        await self.get_department(dept_id, db)
         return await self.dept_repo.update_schedule(dept_id, schedule, db)
 
 

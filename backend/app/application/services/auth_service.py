@@ -173,7 +173,7 @@ class AuthService:
         user = await self.user_repo.get_by_email(email, db)
 
         if user and user.is_active:
-            reset_token = JWTHandler.create_access_token(
+            JWTHandler.create_access_token(
                 {"sub": user.id, "email": user.email, "purpose": "password_reset"}
             )
 

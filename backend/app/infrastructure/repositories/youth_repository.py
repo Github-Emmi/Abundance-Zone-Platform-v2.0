@@ -5,9 +5,8 @@ SQLAlchemy implementation of IYouthRepository
 
 from sqlalchemy import func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload, joinedload
+from sqlalchemy.orm import selectinload
 
-from app.core.exceptions import NotFoundException
 from app.infrastructure.database.models.youth import YouthModel
 from app.infrastructure.database.models.attendance import AttendanceModel
 from app.infrastructure.database.models.event import EventModel

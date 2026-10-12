@@ -1,7 +1,7 @@
 """Attendance API Router"""
 
 from datetime import datetime
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from app.api.deps import CurrentUserDep, DbSessionDep
 from app.api.schemas.attendance import *
 from app.api.schemas.responses import ApiResponse

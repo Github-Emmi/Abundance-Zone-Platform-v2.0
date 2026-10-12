@@ -3,7 +3,7 @@ User Repository Implementation (Infrastructure Layer)
 SQLAlchemy implementation of IUserRepository
 """
 
-from sqlalchemy import func, or_, select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 

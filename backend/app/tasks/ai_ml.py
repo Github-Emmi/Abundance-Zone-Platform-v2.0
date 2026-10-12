@@ -3,19 +3,18 @@ AI/ML Background Tasks
 Intelligent analytics, predictions, and risk detection
 """
 
-from typing import Dict, List, Optional
+from typing import Dict, List
 from datetime import datetime, timedelta
 import logging
 
 from sqlalchemy import select, func, and_
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.tasks.celery_app import celery_app
 from app.core.database import AsyncSessionLocal
 from app.infrastructure.database.models.user import UserModel
 from app.infrastructure.database.models.attendance import AttendanceModel
 from app.infrastructure.database.models.event import EventModel
-from app.domain.value_objects.enums import AttendanceStatus, MembershipStatus
+from app.domain.value_objects.enums import AttendanceStatus
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -242,7 +241,7 @@ def detect_at_risk_youths(self, min_risk_level: str = "medium") -> Dict:
 
             async with AsyncSessionLocal() as session:
                 # Get all active users
-                users_query = select(UserModel).where(UserModel.is_active == True)
+                users_query = select(UserModel).where(UserModel.is_active is True)
                 users_result = await session.execute(users_query)
                 users = users_result.scalars().all()
 
@@ -326,7 +325,7 @@ def calculate_engagement_scores(self) -> Dict:
             logger.info("Calculating engagement scores for all users")
 
             async with AsyncSessionLocal() as session:
-                users_query = select(UserModel).where(UserModel.is_active == True)
+                users_query = select(UserModel).where(UserModel.is_active is True)
                 users_result = await session.execute(users_query)
                 users = users_result.scalars().all()
 
@@ -405,7 +404,7 @@ def generate_insights(self) -> Dict:
             async with AsyncSessionLocal() as session:
                 # Get overall statistics
                 total_users_query = select(func.count(UserModel.id)).where(
-                    UserModel.is_active == True
+                    UserModel.is_active is True
                 )
                 total_users = (await session.execute(total_users_query)).scalar() or 0
 

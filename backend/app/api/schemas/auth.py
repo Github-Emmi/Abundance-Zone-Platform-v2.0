@@ -3,7 +3,6 @@ Authentication Schemas
 Request/Response models for authentication endpoints
 """
 
-from datetime import datetime
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 

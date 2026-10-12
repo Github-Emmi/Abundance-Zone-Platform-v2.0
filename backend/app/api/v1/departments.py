@@ -1,6 +1,6 @@
 """Department Management API Router"""
 
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status
 from app.api.deps import CurrentUserDep, DbSessionDep
 from app.api.schemas.department import *
 from app.api.schemas.pagination import PaginationParams, get_pagination_params

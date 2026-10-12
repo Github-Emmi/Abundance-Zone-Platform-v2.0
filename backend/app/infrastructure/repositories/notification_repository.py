@@ -5,7 +5,6 @@ SQLAlchemy implementation of INotificationRepository
 
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.infrastructure.database.models.notification import NotificationModel
 from app.infrastructure.database.models.user import UserModel
@@ -125,7 +124,7 @@ class NotificationRepository:
         # Get all users in the branch
         result = await db.execute(
             select(UserModel.id).where(
-                UserModel.branch_id == branch_id, UserModel.is_active == True
+                UserModel.branch_id == branch_id, UserModel.is_active is True
             )
         )
         user_ids = result.scalars().all()

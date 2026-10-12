@@ -7,7 +7,6 @@ from uuid import uuid4
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db
 from app.core.exceptions import NotFoundException, ValidationException
 from app.infrastructure.repositories.branch_repository import (
     BranchRepository,
@@ -112,7 +111,7 @@ class BranchService:
         - Only SUPER_ADMIN can delete branches
         - Deletion is soft (sets is_active=False)
         """
-        branch = await self.get_branch(branch_id, db)
+        await self.get_branch(branch_id, db)
         return await self.branch_repo.delete(branch_id, db)
 
     async def assign_coordinator(
@@ -126,7 +125,7 @@ class BranchService:
         - Coordinator can only be assigned to one branch
         """
         # Validate branch exists
-        branch = await self.get_branch(branch_id, db)
+        await self.get_branch(branch_id, db)
 
         # Validate coordinator exists and has correct role
         coordinator = await self.user_repo.get_by_id(coordinator_id, db)

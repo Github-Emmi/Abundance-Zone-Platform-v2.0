@@ -38,7 +38,7 @@ class BranchRepository:
         count_result = await db.execute(
             select(func.count())
             .select_from(BranchModel)
-            .where(BranchModel.is_active == True)
+            .where(BranchModel.is_active is True)
         )
         total = count_result.scalar()
 
@@ -46,7 +46,7 @@ class BranchRepository:
         result = await db.execute(
             select(BranchModel)
             .options(selectinload(BranchModel.coordinator))
-            .where(BranchModel.is_active == True)
+            .where(BranchModel.is_active is True)
             .offset(offset)
             .limit(limit)
             .order_by(BranchModel.created_at.desc())
@@ -112,7 +112,7 @@ class BranchRepository:
             .select_from(DepartmentModel)
             .where(
                 DepartmentModel.branch_id == branch_id,
-                DepartmentModel.is_active == True,
+                DepartmentModel.is_active is True,
             )
         )
         department_count = dept_count_result.scalar()
@@ -137,7 +137,7 @@ class BranchRepository:
         result = await db.execute(
             select(func.count())
             .select_from(BranchModel)
-            .where(BranchModel.is_active == True)
+            .where(BranchModel.is_active is True)
         )
         return result.scalar()
 

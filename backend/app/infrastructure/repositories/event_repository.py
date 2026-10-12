@@ -8,9 +8,7 @@ from sqlalchemy import func, select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.exceptions import NotFoundException
 from app.infrastructure.database.models.event import EventModel
-from app.infrastructure.database.models.user import UserModel
 
 
 class EventRepository:

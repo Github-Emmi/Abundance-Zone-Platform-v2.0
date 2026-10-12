@@ -1,6 +1,6 @@
 """Event Model"""
 
-from typing import Optional, List
+from typing import Optional
 from uuid import uuid4
 from datetime import datetime
 from sqlalchemy import (
@@ -12,7 +12,7 @@ from sqlalchemy import (
     Index,
     Enum as SQLEnum,
 )
-from sqlalchemy.dialects.postgresql import UUID, ARRAY
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infrastructure.database.models.base import Base, TimestampMixin

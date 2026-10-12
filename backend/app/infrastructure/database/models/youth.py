@@ -3,7 +3,7 @@
 from typing import Optional
 from uuid import uuid4
 from datetime import datetime
-from sqlalchemy import String, Boolean, DateTime, ForeignKey, Index, Enum as SQLEnum
+from sqlalchemy import String, DateTime, ForeignKey, Index, Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 

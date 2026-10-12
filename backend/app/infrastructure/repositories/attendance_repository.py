@@ -4,9 +4,9 @@ SQLAlchemy implementation of IAttendanceRepository
 """
 
 from datetime import datetime
-from sqlalchemy import func, select, and_, case
+from sqlalchemy import func, select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload, joinedload
+from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import IntegrityError
 
 from app.infrastructure.database.models.attendance import AttendanceModel

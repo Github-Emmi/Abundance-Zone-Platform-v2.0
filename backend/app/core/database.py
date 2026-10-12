@@ -9,25 +9,12 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
     async_sessionmaker,
 )
-from sqlalchemy.pool import NullPool
 from app.core.config import settings
 
 # Import Base from models (not duplicate definition)
 from app.infrastructure.database.models.base import Base
 
 # Import all models so Alembic can detect them
-from app.infrastructure.database.models import (
-    UserModel,
-    BranchModel,
-    DepartmentModel,
-    YouthModel,
-    EventModel,
-    AttendanceModel,
-    PledgeModel,
-    PaymentModel,
-    NotificationModel,
-    RefreshTokenModel,
-)
 
 
 # ─── Create Async Engine for Neon ───────────────────────────────────────────

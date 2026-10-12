@@ -9,7 +9,7 @@ from typing import Dict, List, Optional
 from datetime import datetime, timedelta
 import logging
 
-from sqlalchemy import select, func, and_, or_
+from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.tasks.celery_app import celery_app
@@ -323,14 +323,14 @@ def generate_monthly_financial_report(self, month: Optional[str] = None) -> Dict
                 report_month = today.replace(day=1)
 
             # Calculate month date range
-            start_date = datetime.combine(report_month, datetime.min.time())
+            datetime.combine(report_month, datetime.min.time())
             if report_month.month == 12:
-                end_date = datetime.combine(
+                datetime.combine(
                     report_month.replace(year=report_month.year + 1, month=1),
                     datetime.min.time(),
                 )
             else:
-                end_date = datetime.combine(
+                datetime.combine(
                     report_month.replace(month=report_month.month + 1),
                     datetime.min.time(),
                 )
@@ -339,7 +339,7 @@ def generate_monthly_financial_report(self, month: Optional[str] = None) -> Dict
                 f"Generating monthly financial report for {report_month.strftime('%B %Y')}"
             )
 
-            async with AsyncSessionLocal() as session:
+            async with AsyncSessionLocal():
                 # TODO: Implement financial queries when pledge models are available
                 # For now, return placeholder data
 
@@ -452,7 +452,7 @@ def export_users_csv(self) -> Dict:
             logger.info("Exporting users to CSV")
 
             async with AsyncSessionLocal() as session:
-                query = select(UserModel).where(UserModel.is_active == True)
+                query = select(UserModel).where(UserModel.is_active is True)
                 result = await session.execute(query)
                 users = result.scalars().all()
 

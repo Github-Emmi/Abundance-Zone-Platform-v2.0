@@ -3,7 +3,7 @@ Authentication API Router
 Endpoints for login, registration, token refresh, password reset
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import CurrentUser, get_current_user, get_db

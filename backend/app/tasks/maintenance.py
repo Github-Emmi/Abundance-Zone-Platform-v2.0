@@ -4,7 +4,7 @@ Cleanup, backups, and system maintenance
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict
 
 from app.tasks.celery_app import celery_app

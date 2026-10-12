@@ -5,7 +5,7 @@ from datetime import datetime
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import NotFoundException, ValidationException
+from app.core.exceptions import NotFoundException
 from app.infrastructure.repositories.event_repository import (
     EventRepository,
     get_event_repository,
@@ -70,7 +70,7 @@ class EventService:
     async def create_rsvp(
         self, event_id: str, user_id: str, status: str, db: AsyncSession
     ) -> dict:
-        event = await self.get_event(event_id, db)
+        await self.get_event(event_id, db)
         return await self.event_repo.create_rsvp(event_id, user_id, status, db)
 
     async def update_rsvp(
