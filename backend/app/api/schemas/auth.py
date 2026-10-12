@@ -3,7 +3,6 @@ Authentication Schemas
 Request/Response models for authentication endpoints
 """
 
-
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.domain.value_objects.enums import Role
