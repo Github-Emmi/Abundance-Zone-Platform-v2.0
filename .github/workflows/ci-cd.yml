@@ -1,0 +1,212 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: '3.12'
+  BACKEND_DIR: backend
+
+jobs:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # 🔍 CODE QUALITY & SECURITY
+  # ═══════════════════════════════════════════════════════════════════════════
+  quality:
+    name: 🔍 Code Quality & Security
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: '${{ env.BACKEND_DIR }}/requirements-dev.txt'
+          
+      - name: 📦 Install dependencies
+        run: |
+          cd ${{ env.BACKEND_DIR }}
+          pip install --upgrade pip
+          pip install -r requirements-dev.txt
+          
+      - name: 🎨 Format check with Black
+        run: |
+          cd ${{ env.BACKEND_DIR }}
+          black --check app/
+          
+      - name: 📏 Lint with Ruff
+        run: |
+          cd ${{ env.BACKEND_DIR }}
+          ruff check app/
+          
+      - name: 🔐 Security scan with Bandit
+        run: |
+          cd ${{ env.BACKEND_DIR }}
+          pip install bandit[toml]
+          bandit -r app/ -f json -o bandit-report.json || true
+          bandit -r app/
+          
+      - name: 🔍 Type check with MyPy
+        run: |
+          cd ${{ env.BACKEND_DIR }}
+          mypy app/ --ignore-missing-imports || true
+        continue-on-error: true
+          
+      - name: 📊 Upload security report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report
+          path: ${{ env.BACKEND_DIR }}/bandit-report.json
+          retention-days: 30
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # 🧪 TESTING
+  # ═══════════════════════════════════════════════════════════════════════════
+  test:
+    name: 🧪 Run Tests
+    runs-on: ubuntu-latest
+    needs: quality
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+          
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: '${{ env.BACKEND_DIR }}/requirements-dev.txt'
+          
+      - name: 📦 Install dependencies
+        run: |
+          cd ${{ env.BACKEND_DIR }}
+          pip install --upgrade pip
+          pip install -r requirements-dev.txt
+          
+      - name: 🧪 Run tests with coverage
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:test_password@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379
+          CELERY_BROKER_URL: redis://localhost:6379/0
+          CELERY_RESULT_BACKEND: redis://localhost:6379/1
+          JWT_SECRET_KEY: test_secret_key_for_ci
+          ENVIRONMENT: test
+        run: |
+          cd ${{ env.BACKEND_DIR }}
+          pytest --cov=app --cov-report=xml --cov-report=term --cov-report=html -v
+          
+      - name: 📊 Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ${{ env.BACKEND_DIR }}/coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+        continue-on-error: true
+          
+      - name: 📊 Upload HTML coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: ${{ env.BACKEND_DIR }}/htmlcov
+          retention-days: 30
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # 🐳 BUILD DOCKER IMAGE
+  # ═══════════════════════════════════════════════════════════════════════════
+  build:
+    name: 🐳 Build Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: 🏗️ Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ env.BACKEND_DIR }}
+          file: ${{ env.BACKEND_DIR }}/Dockerfile
+          push: false
+          tags: azymp-backend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          
+      - name: 🧪 Test Docker image
+        run: |
+          docker run --rm azymp-backend:${{ github.sha }} python -c "import app; print('✅ Image works')"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # 🚀 DEPLOY TO FLY.IO
+  # ═══════════════════════════════════════════════════════════════════════════
+  deploy:
+    name: 🚀 Deploy to Fly.io
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🚀 Setup Fly CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+        
+      - name: 🔄 Deploy Celery Worker
+        run: |
+          cd ${{ env.BACKEND_DIR }}
+          flyctl deploy --config fly.worker.toml --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          
+      - name: 🕐 Deploy Celery Beat
+        run: |
+          cd ${{ env.BACKEND_DIR }}
+          flyctl deploy --config fly.beat.toml --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          
+      - name: ✅ Deployment Success
+        run: |
+          echo "🎉 Deployment completed successfully!"
+          echo "📊 Worker: abundance-zone-worker"
+          echo "⏰ Beat: abundance-zone-beat"
