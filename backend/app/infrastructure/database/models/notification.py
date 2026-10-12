@@ -57,7 +57,9 @@ class NotificationModel(Base, TimestampMixin):
     )
 
     user_id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        UUID(as_uuid=False),
+        ForeignKey("users.id", ondelete="CASCADE", name="fk_notifications_user"),
+        nullable=False,
     )
     user = relationship("UserModel", back_populates="notifications")
 

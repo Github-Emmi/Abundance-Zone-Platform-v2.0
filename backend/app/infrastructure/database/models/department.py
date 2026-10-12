@@ -24,11 +24,13 @@ class DepartmentModel(Base, TimestampMixin):
 
     branch_id: Mapped[str] = mapped_column(
         UUID(as_uuid=False),
-        ForeignKey("branches.id", ondelete="CASCADE"),
+        ForeignKey("branches.id", ondelete="CASCADE", name="fk_departments_branch"),
         nullable=False,
     )
     leader_id: Mapped[Optional[str]] = mapped_column(
-        UUID(as_uuid=False), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        UUID(as_uuid=False),
+        ForeignKey("users.id", ondelete="SET NULL", name="fk_departments_leader"),
+        nullable=True,
     )
 
     branch = relationship(

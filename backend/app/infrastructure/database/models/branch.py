@@ -68,7 +68,7 @@ class BranchModel(Base, TimestampMixin):
     # Coordinator (Foreign Key)
     coordinator_id: Mapped[Optional[str]] = mapped_column(
         UUID(as_uuid=False),
-        ForeignKey("users.id", ondelete="SET NULL"),
+        ForeignKey("users.id", ondelete="SET NULL", name="fk_branches_coordinator"),
         unique=True,
         nullable=True,
         comment="Branch coordinator user ID",

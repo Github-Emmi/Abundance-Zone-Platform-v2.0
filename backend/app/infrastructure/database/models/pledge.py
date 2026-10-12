@@ -44,7 +44,9 @@ class PledgeModel(Base, TimestampMixin):
     )
 
     user_id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), ForeignKey("users.id"), nullable=False
+        UUID(as_uuid=False),
+        ForeignKey("users.id", name="fk_pledges_user"),
+        nullable=False,
     )
     user = relationship("UserModel", back_populates="pledges")
     payments = relationship(

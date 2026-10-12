@@ -34,11 +34,13 @@ class YouthModel(Base, TimestampMixin):
     attendance_rate: Mapped[float] = mapped_column(default=0.0, nullable=False)
 
     branch_id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), ForeignKey("branches.id"), nullable=False
+        UUID(as_uuid=False),
+        ForeignKey("branches.id", name="fk_youths_branch"),
+        nullable=False,
     )
     department_id: Mapped[Optional[str]] = mapped_column(
         UUID(as_uuid=False),
-        ForeignKey("departments.id", ondelete="SET NULL"),
+        ForeignKey("departments.id", ondelete="SET NULL", name="fk_youths_department"),
         nullable=True,
     )
 

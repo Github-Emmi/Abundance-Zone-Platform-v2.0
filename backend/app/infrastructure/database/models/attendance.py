@@ -37,13 +37,19 @@ class AttendanceModel(Base, TimestampMixin):
     notes: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
 
     youth_id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), ForeignKey("youths.id", ondelete="CASCADE"), nullable=False
+        UUID(as_uuid=False),
+        ForeignKey("youths.id", ondelete="CASCADE", name="fk_attendances_youth"),
+        nullable=False,
     )
     event_id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), ForeignKey("events.id", ondelete="CASCADE"), nullable=False
+        UUID(as_uuid=False),
+        ForeignKey("events.id", ondelete="CASCADE", name="fk_attendances_event"),
+        nullable=False,
     )
     recorded_by_id: Mapped[Optional[str]] = mapped_column(
-        UUID(as_uuid=False), ForeignKey("users.id"), nullable=True
+        UUID(as_uuid=False),
+        ForeignKey("users.id", name="fk_attendances_recorded_by"),
+        nullable=True,
     )
 
     youth = relationship("YouthModel", back_populates="attendance_records")

@@ -87,7 +87,7 @@ class UserModel(Base, TimestampMixin):
     # Foreign Keys
     branch_id: Mapped[Optional[str]] = mapped_column(
         UUID(as_uuid=False),
-        ForeignKey("branches.id", ondelete="SET NULL"),
+        ForeignKey("branches.id", ondelete="SET NULL", name="fk_users_branch"),
         nullable=True,
         index=True,
         comment="Branch assignment",
@@ -95,7 +95,7 @@ class UserModel(Base, TimestampMixin):
 
     department_id: Mapped[Optional[str]] = mapped_column(
         UUID(as_uuid=False),
-        ForeignKey("departments.id", ondelete="SET NULL"),
+        ForeignKey("departments.id", ondelete="SET NULL", name="fk_users_department"),
         nullable=True,
         comment="Department assignment",
     )

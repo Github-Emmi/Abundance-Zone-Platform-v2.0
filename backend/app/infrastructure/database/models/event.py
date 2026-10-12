@@ -44,10 +44,14 @@ class EventModel(Base, TimestampMixin):
     is_regional: Mapped[bool] = mapped_column(Boolean, default=False)
 
     branch_id: Mapped[Optional[str]] = mapped_column(
-        UUID(as_uuid=False), ForeignKey("branches.id"), nullable=True
+        UUID(as_uuid=False),
+        ForeignKey("branches.id", name="fk_events_branch"),
+        nullable=True,
     )
     created_by_id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), ForeignKey("users.id"), nullable=False
+        UUID(as_uuid=False),
+        ForeignKey("users.id", name="fk_events_created_by"),
+        nullable=False,
     )
 
     branch = relationship("BranchModel", back_populates="events")
