@@ -41,7 +41,6 @@ jobs:
           black --check app/
           
       - name: 📏 Lint with Ruff
-      - name: 📏 Lint with Ruff
         run: |
           cd ${{ env.BACKEND_DIR }}
           ruff check app/ --ignore F403,F405,E501
