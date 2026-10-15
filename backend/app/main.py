@@ -74,8 +74,7 @@ def create_app() -> FastAPI:
     # ─── Security Middleware ─────────────────────────────────────────────────
     app.add_middleware(
         TrustedHostMiddleware,
-        allowed_hosts=(
-            settings.ALLOWED_HOSTS if settings.ENVIRONMENT == "production" else ["*"]
+        allowed_hosts=["*"],  # Fly.io handles host validation at proxy level
         ),
     )
 
