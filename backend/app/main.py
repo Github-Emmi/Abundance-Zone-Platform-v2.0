@@ -26,6 +26,7 @@ from app.api.v1 import (
     events,
     attendance,
     notifications,
+    task,
 )
 
 
@@ -179,6 +180,7 @@ def create_app() -> FastAPI:
     app.include_router(events.router, prefix="/api/v1", tags=["Events"])
     app.include_router(attendance.router, prefix="/api/v1", tags=["Attendance"])
     app.include_router(notifications.router, prefix="/api/v1", tags=["Notifications"])
+    app.include_router(task.router, prefix="/api/v1", tags=["Task Monitoring"])
 
     return app
 
