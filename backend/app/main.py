@@ -28,6 +28,9 @@ from app.api.v1 import (
     notifications,
     task,
 )
+from app.api.v1.ai import predictions_router, analytics_router
+from app.api.v1.analytics import reports_router
+from app.api.v1.finance import reports_router as finance_reports_router
 
 
 # ─── Application Lifespan ────────────────────────────────────────────────────
@@ -181,6 +184,12 @@ def create_app() -> FastAPI:
     app.include_router(attendance.router, prefix="/api/v1", tags=["Attendance"])
     app.include_router(notifications.router, prefix="/api/v1", tags=["Notifications"])
     app.include_router(task.router, prefix="/api/v1", tags=["Task Monitoring"])
+    app.include_router(predictions_router, prefix="/api/v1", tags=["AI/ML Predictions"])
+    app.include_router(analytics_router, prefix="/api/v1", tags=["AI/ML Analytics"])
+    app.include_router(reports_router, prefix="/api/v1", tags=["Analytics & Reports"])
+    app.include_router(
+        finance_reports_router, prefix="/api/v1", tags=["Finance Reports"]
+    )
 
     return app
 

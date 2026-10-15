@@ -1,17 +1,30 @@
-app = "abundance-zone-beat"
-primary_region = "ord"
+#!/usr/bin/env bash
+set -euo pipefail
+export PATH="$HOME/.fly/bin:$PATH"
 
-[build]
-  dockerfile = "Dockerfile"
+# Set secrets for the beat scheduler app
+# IMPORTANT: Never commit actual secrets to version control!
+# Use this template and replace with your actual values
 
-[env]
-  ENVIRONMENT = "production"
+flyctl secrets set \
+  DATABASE_URL="<your-neon-postgres-url>" \
+  REDIS_URL="<your-upstash-redis-url>" \
+  CELERY_BROKER_URL="<your-redis-url>" \
+  CELERY_RESULT_BACKEND="<your-redis-url>" \
+  GOOGLE_API_KEY="<your-google-ai-key>" \
+  OPENAI_API_KEY="<your-openai-key>" \
+  CLOUDINARY_CLOUD_NAME="<your-cloudinary-cloud>" \
+  CLOUDINARY_API_KEY="<your-cloudinary-key>" \
+  CLOUDINARY_API_SECRET="<your-cloudinary-secret>" \
+  JWT_SECRET_KEY="<generate-secure-key>" \
+  JWT_REFRESH_SECRET_KEY="<generate-secure-key>" \
+  DATABASE_URL_SYNC="<your-postgres-sync-url>" \
+  FIREBASE_PROJECT_ID="<your-firebase-project>" \
+  FIREBASE_CLIENT_EMAIL="<your-firebase-email>" \
+  FIREBASE_PRIVATE_KEY_ID="<your-firebase-key-id>" \
+  FIREBASE_PRIVATE_KEY="<your-firebase-private-key>" \
+  RESEND_API_KEY="<your-resend-key>" \
+  --app abundance-zone-beat
 
-[processes]
-  beat = "celery -A app.tasks.celery_app beat --loglevel=info"
-
-[[vm]]
-  size = "shared-cpu-1x"
-  memory = "256mb"
-[[restart]]
-  policy = "always"
+# To generate secure keys, use:
+# python -c "import secrets; print(secrets.token_hex(32))"

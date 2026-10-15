@@ -65,7 +65,7 @@ class UserInfo(BaseModel):
     role: Role
     branch_id: str | None
     department_id: str | None
-    profile_image_url: str | None = None
+    profile_image_url: str | None
     is_email_verified: bool
     is_active: bool
 
@@ -116,3 +116,9 @@ class ResetPasswordRequest(BaseModel):
                 "Password must contain at least 1 special character (!@#$%^&*)"
             )
         return v
+
+
+class ResendVerificationRequest(BaseModel):
+    """Resend email verification request."""
+
+    pass  # No fields needed - user_id comes from auth token

@@ -3,6 +3,7 @@ User Management API Router
 Endpoints for user CRUD operations and role management
 """
 
+from datetime import datetime
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -272,3 +273,222 @@ async def assign_branch(
         user_id, payload.branch_id, current_user, db
     )
     return ApiResponse(data=UserResponse.model_validate(user))
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# AI/ML Integration Endpoints
+# ═══════════════════════════════════════════════════════════════════════════
+
+import logging
+from app.tasks.ai_ml import predict_attendance_risk
+
+logger = logging.getLogger(__name__)
+
+
+@router.get("/{user_id}/risk-assessment", response_model=ApiResponse[dict])
+async def get_risk_assessment(
+    user_id: str,
+    current_user: CurrentUser = Depends(
+        require_role([Role.SUPER_ADMIN, Role.BRANCH_COORDINATOR])
+    ),
+    db: AsyncSession = Depends(get_db),
+    user_service=Depends(get_user_service),
+):
+    """
+    Get AI-powered attendance risk assessment for user.
+
+    **Protected Endpoint** (SUPER_ADMIN or BRANCH_COORDINATOR)
+
+    **Business Rules:**
+    - Analyzes attendance patterns over last 60 days
+    - Calculates risk level: low, medium, high, critical
+    - Generates personalized recommendations
+    - Results cached for 24 hours for performance
+
+    **Path Parameters:**
+    - user_id: UUID of user to assess
+
+    **Authorization Rules:**
+    - SUPER_ADMIN: Can assess any user
+    - BRANCH_COORDINATOR: Can assess users in their branch
+
+    **Returns:**
+    - task_id: Celery task ID for background processing
+    - status: "queued" or "error"
+    - message: Status message
+    - user_id: User being assessed
+
+    **AI/ML Metrics Calculated:**
+    - attendance_rate: Percentage of events attended (0-100%)
+    - consistency_score: Weekly attendance consistency (0-100%)
+    - engagement_score: Overall engagement metric (0-100)
+    - risk_level: low/medium/high/critical
+    - recommendations: Personalized action items
+
+    **Risk Level Criteria:**
+    - **Low**: ≥80% attendance, ≥70% consistency
+    - **Medium**: ≥60% attendance, ≥50% consistency
+    - **High**: ≥40% attendance
+    - **Critical**: <40% attendance
+
+    **Use Cases:**
+    - Early intervention for at-risk youth
+    - Monthly coordinator reviews
+    - Parent/guardian communications
+    - Targeted engagement programs
+
+    **Performance:**
+    - Analysis runs asynchronously (1-5 seconds)
+    - Check task status via /api/v1/tasks/{task_id}
+    - Result includes full analysis when complete
+
+    **Example Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "task_id": "abc-123-def",
+            "status": "queued",
+            "message": "Risk assessment started",
+            "user_id": "user-uuid",
+            "timestamp": "2024-01-15T10:30:00Z"
+        }
+    }
+    ```
+    """
+    # Verify user exists and check permissions
+    await user_service.get_user(user_id, current_user, db)
+
+    task_id = None
+    try:
+        task = predict_attendance_risk.delay(user_id)
+        task_id = task.id
+        logger.info(f"Dispatched risk assessment task {task_id} for user {user_id}")
+        status_str = "queued"
+        message = "Risk assessment started"
+    except Exception as e:
+        logger.error(f"Failed to dispatch risk assessment task: {e}")
+        status_str = "error"
+        message = "Failed to queue risk assessment"
+
+    return ApiResponse(
+        data={
+            "task_id": task_id,
+            "status": status_str,
+            "message": message,
+            "user_id": user_id,
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+    )
+
+
+@router.get("/{user_id}/engagement-score", response_model=ApiResponse[dict])
+async def get_engagement_score(
+    user_id: str,
+    current_user: CurrentUser = Depends(
+        require_role([Role.SUPER_ADMIN, Role.BRANCH_COORDINATOR])
+    ),
+    db: AsyncSession = Depends(get_db),
+    user_service=Depends(get_user_service),
+):
+    """
+    Get user's engagement score with detailed metrics.
+
+    **Protected Endpoint** (SUPER_ADMIN or BRANCH_COORDINATOR)
+
+    **Business Rules:**
+    - Calculates comprehensive engagement score (0-100)
+    - Analyzes multiple engagement dimensions
+    - Triggers background calculation for real-time data
+    - Result available via task monitoring
+
+    **Path Parameters:**
+    - user_id: UUID of user
+
+    **Authorization Rules:**
+    - SUPER_ADMIN: Can view any user's score
+    - BRANCH_COORDINATOR: Can view scores for users in their branch
+
+    **Returns:**
+    - task_id: Celery task ID for background calculation
+    - status: "queued" or "error"
+    - message: Status message
+    - user_id: User being assessed
+
+    **Engagement Score Formula:**
+    ```
+    Score = (Attendance Rate × 0.5) +
+            (Consistency × 0.3) +
+            (Recent Activity × 0.2)
+    ```
+
+    **Score Calculation:**
+    - **Attendance Rate (50%)**: % of events attended vs. total events
+    - **Consistency (30%)**: Regular weekly attendance pattern
+    - **Recent Activity (20%)**: Attendance in last 14 days
+
+    **Score Interpretation:**
+    - **90-100**: Highly engaged - excellent attendance
+    - **70-89**: Engaged - good attendance patterns
+    - **50-69**: Moderately engaged - needs encouragement
+    - **30-49**: Low engagement - intervention recommended
+    - **0-29**: Disengaged - immediate action required
+
+    **Use Cases:**
+    - Recognition programs (top engaged youth)
+    - Gamification and leaderboards
+    - Progress tracking over time
+    - Parent reports
+    - Coordinator dashboards
+
+    **Performance:**
+    - Calculation runs in background (1-3 seconds)
+    - Monitor via /api/v1/tasks/{task_id}
+    - Includes attendance breakdown in result
+
+    **Example Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "task_id": "xyz-789-abc",
+            "status": "queued",
+            "message": "Engagement score calculation started",
+            "user_id": "user-uuid",
+            "timestamp": "2024-01-15T10:35:00Z"
+        }
+    }
+    ```
+
+    **Related Endpoints:**
+    - GET /api/v1/users/{user_id}/risk-assessment - Full risk analysis
+    - POST /api/v1/ai/engagement-scores - Calculate scores for all users
+    - GET /api/v1/tasks/{task_id} - Check calculation status
+    """
+    # Verify user exists and check permissions
+    await user_service.get_user(user_id, current_user, db)
+
+    task_id = None
+    try:
+        # Reuse the risk prediction task which includes engagement score
+        task = predict_attendance_risk.delay(user_id)
+        task_id = task.id
+        logger.info(
+            f"Dispatched engagement score calculation task {task_id} for user {user_id}"
+        )
+        status_str = "queued"
+        message = "Engagement score calculation started"
+    except Exception as e:
+        logger.error(f"Failed to dispatch engagement score task: {e}")
+        status_str = "error"
+        message = "Failed to queue engagement score calculation"
+
+    return ApiResponse(
+        data={
+            "task_id": task_id,
+            "status": status_str,
+            "message": message,
+            "user_id": user_id,
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+    )

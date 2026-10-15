@@ -241,7 +241,7 @@ def detect_at_risk_youths(self, min_risk_level: str = "medium") -> Dict:
 
             async with AsyncSessionLocal() as session:
                 # Get all active users
-                users_query = select(UserModel).where(UserModel.is_active is True)
+                users_query = select(UserModel).where(UserModel.is_active.is_True())
                 users_result = await session.execute(users_query)
                 users = users_result.scalars().all()
 

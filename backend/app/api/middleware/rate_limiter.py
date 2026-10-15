@@ -12,7 +12,7 @@ import hashlib
 from app.core.redis import get_redis_client
 
 
-class RateLimiter:
+class RateLimiter: 
     """
     Rate limiter middleware using Redis.
 

@@ -4,11 +4,24 @@ info:
   seq: 1
 
 http:
-  method: GET
-  url: "{{baseUrl}}/api/v1/auth/me"
+  method: POST
+  url: "{{baseUrl}}/api/v1/events"
+  body:
+    type: json
+    data: |-
+      {
+        "title": "Happy Is The Goal",
+        "event_type": "SUNDAY_SERVICE",
+        "event_date": "2026-10-15T17:53:44.089Z",
+        "branch_id": "1de286ef-b8f7-4582-bc42-28185487133f",
+        "description": "Youth Sunday Service",
+        "event_status": "COMPLETED",
+        "venue": "Oke-afa 2 Branch",
+        "end_date": "2026-10-15T17:53:44.089Z"
+      }
   auth:
     type: bearer
-    token: "{{token}}"
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiYmQ3MDBjOC0yZmJmLTQ5OTItOTkwZS0yNDc1YzE3MTRmYTUiLCJlbWFpbCI6ImFkbWluQGFidW5kYW5jZXpvbmUub3JnIiwicm9sZSI6IlNVUEVSX0FETUlOIiwiYnJhbmNoX2lkIjpudWxsLCJleHAiOjE3OTIwODc0NjYsImlhdCI6MTc5MjA4NjU2NiwianRpIjoiZjY0ZTg5MGUtOTg4YS00YWE2LTgxOTgtYmE0NjJjNGE2MWU5IiwidHlwZSI6ImFjY2VzcyJ9.WKjhoK9prMlr0Q3bIyeASQW9wPH6Em03nAABZn1j0tg
 
 settings:
   encodeUrl: true

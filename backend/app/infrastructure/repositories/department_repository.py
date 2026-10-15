@@ -37,7 +37,7 @@ class DepartmentRepository:
             .select_from(DepartmentModel)
             .where(
                 DepartmentModel.branch_id == branch_id,
-                DepartmentModel.is_active is True,
+                DepartmentModel.is_active.is_(True),
             )
         )
         total = count_result.scalar()
@@ -51,7 +51,7 @@ class DepartmentRepository:
             )
             .where(
                 DepartmentModel.branch_id == branch_id,
-                DepartmentModel.is_active is True,
+                DepartmentModel.is_active.is_(True),
             )
             .offset(offset)
             .limit(limit)

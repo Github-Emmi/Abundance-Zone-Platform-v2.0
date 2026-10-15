@@ -13,7 +13,9 @@ http:
         "email": "admin@abundancezone.org",
         "password": "ChangeMe123!"
       }
-  auth: inherit
+  auth:
+    type: bearer
+    token: ""
 
 runtime:
   scripts:

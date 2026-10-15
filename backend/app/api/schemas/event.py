@@ -49,3 +49,40 @@ class RecurringEventRequest(BaseModel):
     interval: int = Field(1, ge=1, le=365)
     end_date: datetime | None = None
     occurrences: int | None = Field(None, ge=1, le=100)
+
+
+class EventReminderRequest(BaseModel):
+    """Request schema for sending event reminders to registrants"""
+
+    reminder_hours_before: int = Field(
+        24, ge=1, le=168, description="Hours before event to remind (default 24)"
+    )
+    custom_message: str | None = Field(
+        None, max_length=500, description="Additional custom message to include"
+    )
+
+
+class EventNotifyRequest(BaseModel):
+    """Request schema for sending custom notifications to event registrants"""
+
+    subject: str = Field(..., min_length=1, max_length=200, description="Email subject line")
+    message: str = Field(..., min_length=1, max_length=1000, description="Email message content")
+    notification_type: str = Field(
+        "announcement",
+        pattern="^(announcement|update|cancellation)$",
+        description="Type of notification",
+    )
+
+
+class EventNotificationResponse(BaseModel):
+    """Response schema for event notification operations"""
+
+    task_ids: list[str] | None = Field(
+        default=None, description="List of Celery task IDs for tracking"
+    )
+    status: str = Field(..., description="Overall status: queued/error")
+    message: str = Field(..., description="Human-readable status message")
+    event_id: str = Field(..., description="Event identifier")
+    recipient_count: int = Field(..., description="Number of recipients")
+    failed_count: int = Field(0, description="Number of failed dispatches")
+    timestamp: str = Field(..., description="Timestamp of operation")

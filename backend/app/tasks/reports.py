@@ -452,7 +452,7 @@ def export_users_csv(self) -> Dict:
             logger.info("Exporting users to CSV")
 
             async with AsyncSessionLocal() as session:
-                query = select(UserModel).where(UserModel.is_active is True)
+                query = select(UserModel).where(UserModel.is_active.is_True())
                 result = await session.execute(query)
                 users = result.scalars().all()
 

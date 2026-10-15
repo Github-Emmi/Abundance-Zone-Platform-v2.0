@@ -36,3 +36,24 @@ class AttendanceSummaryResponse(BaseModel):
 class AttendanceHeatmapResponse(BaseModel):
     date: str
     count: int
+
+
+class AttendanceReportRequest(BaseModel):
+    """Request schema for generating attendance reports."""
+
+    date: str | None = Field(
+        None, description="ISO format date (defaults to today if not provided)"
+    )
+    send_email: bool = Field(
+        False, description="Whether to email the report to coordinators"
+    )
+
+
+class AttendanceReportResponse(BaseModel):
+    """Response schema for attendance report generation."""
+
+    task_id: str | None
+    status: str
+    message: str
+    date: str
+    timestamp: str

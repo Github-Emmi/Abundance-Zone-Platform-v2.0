@@ -3,6 +3,7 @@ Authentication Service
 Business logic for user authentication and authorization
 """
 
+import logging
 from datetime import datetime, timezone
 
 from fastapi import Depends, HTTPException, status
@@ -20,6 +21,13 @@ from app.infrastructure.security.password_hasher import (
     PasswordHasher,
     get_password_hasher,
 )
+from app.tasks.emails import (
+    send_email_verification,
+    send_password_reset_email,
+    send_welcome_email,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class AuthService:
@@ -60,10 +68,46 @@ class AuthService:
 
         user = await self.user_repo.create(user_data, db)
 
+        # Generate email verification token
+        verification_token = JWTHandler.create_access_token(
+            {
+                "sub": user.id,
+                "email": user.email,
+                "purpose": "email_verification",
+            }
+        )
+
+        # Dispatch background email tasks (non-blocking)
+        task_ids = {}
+        try:
+            welcome_task = send_welcome_email.delay(
+                user_email=user.email, user_name=user.name, user_id=user.id
+            )
+            task_ids["welcome_email"] = welcome_task.id
+            logger.info(
+                f"Dispatched welcome email task {welcome_task.id} for user {user.id}"
+            )
+        except Exception as e:
+            logger.warning(f"Failed to dispatch welcome email task: {e}")
+
+        try:
+            verification_task = send_email_verification.delay(
+                user_email=user.email,
+                user_name=user.name,
+                verification_token=verification_token,
+            )
+            task_ids["verification_email"] = verification_task.id
+            logger.info(
+                f"Dispatched verification email task {verification_task.id} for user {user.id}"
+            )
+        except Exception as e:
+            logger.warning(f"Failed to dispatch verification email task: {e}")
+
         return {
             "user_id": user.id,
             "email": user.email,
-            "message": "Registration successful",
+            "message": "Registration successful. Check your email for verification instructions.",
+            "task_ids": task_ids,
         }
 
     async def login(self, payload: LoginRequest, db: AsyncSession) -> LoginResponse:
@@ -172,13 +216,29 @@ class AuthService:
         """Request password reset email."""
         user = await self.user_repo.get_by_email(email, db)
 
+        task_id = None
         if user and user.is_active:
-            JWTHandler.create_access_token(
+            # Generate password reset token
+            reset_token = JWTHandler.create_access_token(
                 {"sub": user.id, "email": user.email, "purpose": "password_reset"}
             )
 
+            # Dispatch password reset email task (non-blocking)
+            try:
+                reset_task = send_password_reset_email.delay(
+                    user_email=user.email, user_name=user.name, reset_token=reset_token
+                )
+                task_id = reset_task.id
+                logger.info(
+                    f"Dispatched password reset email task {reset_task.id} for user {user.id}"
+                )
+            except Exception as e:
+                logger.warning(f"Failed to dispatch password reset email task: {e}")
+
+        # Always return success message (security - prevent email enumeration)
         return {
-            "message": "If your email is registered, you will receive password reset instructions."
+            "message": "If your email is registered, you will receive password reset instructions.",
+            "task_id": task_id,
         }
 
     async def reset_password(
@@ -209,6 +269,50 @@ class AuthService:
             )
 
         return {"message": "Password reset successfully"}
+
+    async def resend_verification_email(self, user_id: str, db: AsyncSession) -> dict:
+        """Resend email verification link."""
+        user = await self.user_repo.get_by_id(user_id, db)
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+            )
+
+        if user.is_email_verified:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already verified",
+            )
+
+        # Generate new verification token
+        verification_token = JWTHandler.create_access_token(
+            {
+                "sub": user.id,
+                "email": user.email,
+                "purpose": "email_verification",
+            }
+        )
+
+        # Dispatch verification email task (non-blocking)
+        task_id = None
+        try:
+            verification_task = send_email_verification.delay(
+                user_email=user.email,
+                user_name=user.name,
+                verification_token=verification_token,
+            )
+            task_id = verification_task.id
+            logger.info(
+                f"Dispatched resend verification email task {verification_task.id} for user {user.id}"
+            )
+        except Exception as e:
+            logger.warning(f"Failed to dispatch verification email task: {e}")
+
+        return {
+            "message": "Verification email sent. Please check your inbox.",
+            "task_id": task_id,
+        }
 
 
 # Dependency

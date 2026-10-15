@@ -13,6 +13,7 @@ from app.api.schemas.auth import (
     LoginResponse,
     RegisterRequest,
     RefreshRequest,
+    ResendVerificationRequest,
     ResetPasswordRequest,
     TokenResponse,
     UserInfo,
@@ -271,4 +272,37 @@ async def reset_password(
     - All existing refresh tokens are revoked (user must re-login on all devices)
     """
     result = await auth_service.reset_password(payload.token, payload.new_password, db)
+    return ApiResponse(data=result)
+
+
+@router.post("/resend-verification", response_model=ApiResponse[dict])
+async def resend_verification_email(
+    payload: ResendVerificationRequest,
+    current_user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    auth_service=Depends(get_auth_service),
+):
+    """
+    Resend email verification link to current user.
+
+    **Protected Endpoint** (Authentication required)
+
+    **Business Rules:**
+    - User must be authenticated
+    - Email must not already be verified
+    - Rate limiting applied (TODO: implement rate limiter middleware)
+
+    **Returns:**
+    - 200: Verification email sent successfully
+    - 400: Email already verified
+    - 401: Not authenticated
+
+    **Use Case:**
+    User didn't receive original verification email or it expired.
+    Frontend provides "Resend Verification" button that calls this endpoint.
+
+    **Rate Limiting:**
+    TODO: Add rate limiting to prevent abuse (e.g., 3 requests per hour per user)
+    """
+    result = await auth_service.resend_verification_email(current_user.id, db)
     return ApiResponse(data=result)
