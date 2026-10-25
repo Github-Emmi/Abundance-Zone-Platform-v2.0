@@ -22,7 +22,7 @@ class IEventRepository(Protocol):
         ...
 
     async def list_by_branch(
-        self, branch_id: str, offset: int, limit: int, db: AsyncSession
+        self, branch_id: str | None, offset: int, limit: int, db: AsyncSession
     ) -> tuple[list[EventModel], int]:
         """List events for a specific branch with pagination."""
         ...

@@ -51,7 +51,7 @@ class EventService:
         return event
 
     async def list_events(
-        self, branch_id: str, offset: int, limit: int, db: AsyncSession
+        self, branch_id: str | None, offset: int, limit: int, db: AsyncSession
     ) -> tuple[list[EventModel], int]:
         return await self.event_repo.list_by_branch(branch_id, offset, limit, db)
 

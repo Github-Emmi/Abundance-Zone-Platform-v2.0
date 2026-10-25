@@ -61,7 +61,7 @@ class YouthService:
         return youth
 
     async def list_youths(
-        self, branch_id: str, offset: int, limit: int, db: AsyncSession
+        self, branch_id: str | None, offset: int, limit: int, db: AsyncSession
     ) -> tuple[list[YouthModel], int]:
         return await self.youth_repo.list_by_branch(branch_id, offset, limit, db)
 

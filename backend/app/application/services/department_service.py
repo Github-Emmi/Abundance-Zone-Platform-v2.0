@@ -64,7 +64,7 @@ class DepartmentService:
         return dept
 
     async def list_departments(
-        self, branch_id: str, offset: int, limit: int, db: AsyncSession
+        self, branch_id: str | None, offset: int, limit: int, db: AsyncSession
     ) -> tuple[list[DepartmentModel], int]:
         """List departments in a branch with pagination."""
         return await self.dept_repo.list_by_branch(branch_id, offset, limit, db)

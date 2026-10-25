@@ -1,6 +1,6 @@
 """Department Management API Router"""
 
-from fastapi import APIRouter, Depends, status
+from fastapi import Query, APIRouter, Depends, status
 from app.api.deps import CurrentUserDep, DbSessionDep
 from app.api.schemas.department import *
 from app.api.schemas.pagination import PaginationParams, get_pagination_params
@@ -43,9 +43,9 @@ async def get_department(
 
 @router.get("", response_model=ApiResponse[PaginatedResponse[DepartmentResponse]])
 async def list_departments(
-    branch_id: str,
     current_user: CurrentUserDep,
     db: DbSessionDep,
+    branch_id: str | None = Query(None),
     pagination: PaginationParams = Depends(get_pagination_params),
     service: DepartmentService = Depends(get_department_service),
 ):

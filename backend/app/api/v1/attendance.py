@@ -224,3 +224,38 @@ async def generate_attendance_report(
             timestamp=datetime.utcnow().isoformat(),
         )
     )
+
+
+@router.get("/stats", response_model=ApiResponse[AttendanceSummaryResponse])
+async def get_stats(
+    current_user: CurrentUserDep,
+    db: DbSessionDep,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
+    service: AttendanceService = Depends(get_attendance_service),
+):
+    """
+    Get attendance statistics (alias for summary without branch filter).
+    Returns overall attendance stats across all branches.
+    """
+    # Get overall stats (no branch filter)
+    summary = await service.generate_summary(None, start_date, end_date, db)
+    return ApiResponse(data=AttendanceSummaryResponse(**summary))
+    present_result = await db.execute(
+        select(func.count(AttendanceModel.id)).where(
+            AttendanceModel.status == AttendanceStatus.PRESENT
+        )
+    )
+    present = present_result.scalar_one()
+    
+    # Calculate rate
+    rate = (present / total * 100) if total > 0 else 0.0
+    
+    return ApiResponse(
+        data={
+            "total": total,
+            "present": present,
+            "rate": round(rate, 2),
+            "absent": total - present
+        }
+    )

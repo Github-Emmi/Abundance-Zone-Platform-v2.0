@@ -29,7 +29,7 @@ from app.api.v1 import (
     task,
 )
 from app.api.v1.ai import predictions_router, analytics_router
-from app.api.v1.analytics import reports_router
+from app.api.v1.analytics import reports_router, dashboard_router
 from app.api.v1.finance import reports_router as finance_reports_router
 
 
@@ -185,6 +185,7 @@ def create_app() -> FastAPI:
     app.include_router(predictions_router, prefix="/api/v1", tags=["AI/ML Predictions"])
     app.include_router(analytics_router, prefix="/api/v1", tags=["AI/ML Analytics"])
     app.include_router(reports_router, prefix="/api/v1", tags=["Analytics & Reports"])
+    app.include_router(dashboard_router, prefix="/api/v1", tags=["Dashboard Analytics"])
     app.include_router(
         finance_reports_router, prefix="/api/v1", tags=["Finance Reports"]
     )

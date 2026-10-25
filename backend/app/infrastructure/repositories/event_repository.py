@@ -24,26 +24,29 @@ class EventRepository:
         return result.scalar_one_or_none()
 
     async def list_by_branch(
-        self, branch_id: str, offset: int, limit: int, db: AsyncSession
+        self, branch_id: str | None, offset: int, limit: int, db: AsyncSession
     ) -> tuple[list[EventModel], int]:
         """List events for a specific branch with pagination."""
         # Get total count
-        count_result = await db.execute(
-            select(func.count())
-            .select_from(EventModel)
-            .where(EventModel.branch_id == branch_id)
-        )
+        # Build count query conditionally
+        count_query = select(func.count()).select_from(EventModel)
+        if branch_id is not None:
+            count_query = count_query.where(EventModel.branch_id == branch_id)
+        
+        count_result = await db.execute(count_query)
         total = count_result.scalar()
 
         # Get paginated results
-        result = await db.execute(
+        # Build list query conditionally
+        list_query = (
             select(EventModel)
             .options(selectinload(EventModel.branch), selectinload(EventModel.creator))
-            .where(EventModel.branch_id == branch_id)
-            .offset(offset)
-            .limit(limit)
-            .order_by(EventModel.event_date.desc())
         )
+        if branch_id is not None:
+            list_query = list_query.where(EventModel.branch_id == branch_id)
+        
+        list_query = list_query.offset(offset).limit(limit).order_by(EventModel.event_date.desc())
+        result = await db.execute(list_query)
         events = result.scalars().all()
         return list(events), total
 

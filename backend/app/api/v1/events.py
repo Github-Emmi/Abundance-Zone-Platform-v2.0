@@ -2,7 +2,7 @@
 
 import logging
 from datetime import datetime
-from fastapi import APIRouter, Depends, status
+from fastapi import Query, APIRouter, Depends, status
 from app.api.deps import CurrentUserDep, DbSessionDep, require_role
 from app.api.schemas.event import *
 from app.api.schemas.pagination import PaginationParams, get_pagination_params
@@ -189,9 +189,9 @@ async def get_event(
 
 @router.get("", response_model=ApiResponse[PaginatedResponse[EventResponse]])
 async def list_events(
-    branch_id: str,
     current_user: CurrentUserDep,
     db: DbSessionDep,
+    branch_id: str | None = Query(None),
     pagination: PaginationParams = Depends(get_pagination_params),
     service: EventService = Depends(get_event_service),
 ):

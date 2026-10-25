@@ -28,35 +28,37 @@ class DepartmentRepository:
         return result.scalar_one_or_none()
 
     async def list_by_branch(
-        self, branch_id: str, offset: int, limit: int, db: AsyncSession
+        self, branch_id: str | None, offset: int, limit: int, db: AsyncSession
     ) -> tuple[list[DepartmentModel], int]:
         """List departments in a specific branch with pagination."""
         # Get total count
-        count_result = await db.execute(
+        # Build count query conditionally
+        count_query = (
             select(func.count())
             .select_from(DepartmentModel)
-            .where(
-                DepartmentModel.branch_id == branch_id,
-                DepartmentModel.is_active.is_(True),
-            )
+            .where(DepartmentModel.is_active.is_(True))
         )
+        if branch_id is not None:
+            count_query = count_query.where(DepartmentModel.branch_id == branch_id)
+        
+        count_result = await db.execute(count_query)
         total = count_result.scalar()
 
         # Get paginated results
-        result = await db.execute(
+        # Build list query conditionally
+        list_query = (
             select(DepartmentModel)
             .options(
                 selectinload(DepartmentModel.leader),
                 selectinload(DepartmentModel.branch),
             )
-            .where(
-                DepartmentModel.branch_id == branch_id,
-                DepartmentModel.is_active.is_(True),
-            )
-            .offset(offset)
-            .limit(limit)
-            .order_by(DepartmentModel.created_at.desc())
+            .where(DepartmentModel.is_active.is_(True))
         )
+        if branch_id is not None:
+            list_query = list_query.where(DepartmentModel.branch_id == branch_id)
+        
+        list_query = list_query.offset(offset).limit(limit).order_by(DepartmentModel.created_at.desc())
+        result = await db.execute(list_query)
         departments = result.scalars().all()
         return list(departments), total
 

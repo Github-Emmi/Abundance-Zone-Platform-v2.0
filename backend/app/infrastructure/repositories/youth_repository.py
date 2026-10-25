@@ -28,34 +28,34 @@ class YouthRepository:
         return result.scalar_one_or_none()
 
     async def list_by_branch(
-        self, branch_id: str, offset: int, limit: int, db: AsyncSession
+        self, branch_id: str | None, offset: int, limit: int, db: AsyncSession
     ) -> tuple[list[YouthModel], int]:
         """List youths in a specific branch with pagination."""
         # Get total count
-        count_result = await db.execute(
-            select(func.count())
-            .select_from(YouthModel)
-            .where(
-                YouthModel.branch_id == branch_id,
-                YouthModel.membership_status == MembershipStatus.ACTIVE,
-            )
+        # Build count query conditionally
+        count_query = select(func.count()).select_from(YouthModel).where(
+            YouthModel.membership_status == MembershipStatus.ACTIVE
         )
+        if branch_id is not None:
+            count_query = count_query.where(YouthModel.branch_id == branch_id)
+        
+        count_result = await db.execute(count_query)
         total = count_result.scalar()
 
         # Get paginated results
-        result = await db.execute(
+        # Build list query conditionally
+        list_query = (
             select(YouthModel)
             .options(
                 selectinload(YouthModel.branch), selectinload(YouthModel.department)
             )
-            .where(
-                YouthModel.branch_id == branch_id,
-                YouthModel.membership_status == MembershipStatus.ACTIVE,
-            )
-            .offset(offset)
-            .limit(limit)
-            .order_by(YouthModel.created_at.desc())
+            .where(YouthModel.membership_status == MembershipStatus.ACTIVE)
         )
+        if branch_id is not None:
+            list_query = list_query.where(YouthModel.branch_id == branch_id)
+        
+        list_query = list_query.offset(offset).limit(limit).order_by(YouthModel.created_at.desc())
+        result = await db.execute(list_query)
         youths = result.scalars().all()
         return list(youths), total
 

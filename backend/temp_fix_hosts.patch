@@ -1,0 +1,11 @@
+--- a/app/main.py
++++ b/app/main.py
+@@ -76,9 +76,9 @@ def create_app() -> FastAPI:
+     # ─── Middleware ──────────────────────────────────────────────────────────
+     app.add_middleware(
+         TrustedHostMiddleware,
+         allowed_hosts=(
+-            settings.ALLOWED_HOSTS if settings.ENVIRONMENT == "production" else ["*"]
++            ["*"]  # Allow all hosts on Fly.io
+         ),
+     )

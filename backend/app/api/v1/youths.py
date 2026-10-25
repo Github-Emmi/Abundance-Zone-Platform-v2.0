@@ -1,6 +1,6 @@
 """Youth Management API Router"""
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from app.api.deps import CurrentUserDep, DbSessionDep, get_db, Depends
 from app.api.schemas.youth import *
 from app.api.schemas.pagination import PaginationParams, get_pagination_params
@@ -45,9 +45,9 @@ async def get_youth(
 
 @router.get("", response_model=ApiResponse[PaginatedResponse[YouthResponse]])
 async def list_youths(
-    branch_id: str,
     current_user: CurrentUserDep,
     db: DbSessionDep,
+    branch_id: str | None = Query(None),
     pagination: PaginationParams = Depends(get_pagination_params),
     service: YouthService = Depends(get_youth_service),
 ):
